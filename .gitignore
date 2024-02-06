@@ -1,0 +1,6 @@
+variables.tf
+*.tfstate
+*.terraform
+*.terraform.lock.hcl
+terraform.tfstate.backup
+vcenter_credentials.yaml

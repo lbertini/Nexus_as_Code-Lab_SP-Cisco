@@ -1,0 +1,138 @@
+apic:
+  access_policies:
+    vlan_pools:
+      - name: vlans_vCenter
+        allocation : dynamic
+        ranges:
+          - from: 100
+            to: 200
+            allocation: dynamic
+      - name: vlans_L3
+        allocation: static
+        ranges:
+          - from: 300
+            to: 400
+            allocation: static
+
+    routed_domains:
+      - name: L3_Domain
+        vlan_pool: vlans_L3
+
+    aaeps:
+      - name: Nexus_as_Code_AAEP
+        vmware_vmm_domains:
+          - VDS_ACI
+      - name: Nexus_as_Code_AAEP_L3
+        routed_domains:
+          - L3_Domain
+            
+    interface_policies:
+      cdp_policies:
+        - name: nac-cdp-enabled
+          admin_state: true
+        - name: nac-cdp-disabled
+          admin_state: false
+      lldp_policies:
+        - name: nac-lldp-enabled
+          admin_rx_state: true
+          admin_tx_state: true
+        - name: nac-lldp-disabled
+          admin_rx_state: false
+          admin_tx_state: false
+      link_level_policies:
+        - name: nac-link-level-1G-auto
+          speed: 1G
+          auto: true
+          fec_mode: inherit
+        - name: nac-link-level-10G-auto
+          speed: 10G
+          auto: true
+          fec_mode: inherit
+        - name: nac-link-level-100G-auto
+          speed: 100G
+          auto: true
+          fec_mode: inherit
+      port_channel_policies:
+        - name: nac-lacp-active
+          mode: active
+        - name: nac-mac-pinning
+          mode: mac-pin
+
+    leaf_interface_policy_groups:
+      - name: vPC1
+        type: vpc
+        link_level_policy: nac-link-level-10G-auto
+        cdp_policy: nac-cdp-enabled
+        lldp_policy: nac-lldp-enabled
+        aaep: Nexus_as_Code_AAEP
+      - name: vPC2
+        type: vpc
+        link_level_policy: nac-link-level-10G-auto
+        cdp_policy: nac-cdp-enabled
+        lldp_policy: nac-lldp-enabled
+        aaep: Nexus_as_Code_AAEP
+      - name: vPC3
+        type: vpc
+        link_level_policy: nac-link-level-10G-auto
+        cdp_policy: nac-cdp-enabled
+        lldp_policy: nac-lldp-enabled
+        aaep: Nexus_as_Code_AAEP
+      - name: L3OUT_IPG
+        type: access
+        link_level_policy: nac-link-level-1G-auto
+        cdp_policy: nac-cdp-enabled
+        lldp_policy: nac-lldp-enabled
+        aaep: Nexus_as_Code_AAEP_L3
+  
+    leaf_interface_profiles:
+      - name: LEAF101_102_IFP_nac
+        selectors:
+          - name: SEL1
+            policy_group: vPC1
+            port_blocks:
+              - name: BLOCK1
+                description: ESXi
+                from_port: 30
+          - name: SEL2
+            policy_group: vPC2
+            port_blocks:
+              - name: BLOCK2
+                description: ESXi
+                from_port: 31
+          - name: SEL3
+            policy_group: vPC3
+            port_blocks:
+              - name: BLOCK3
+                description: ESXi
+                from_port: 32
+
+      - name: LEAF102_IFP_nac
+        selectors:
+          - name: SEL1
+            policy_group: L3OUT_IPG
+            port_blocks:
+              - name: BLOCK1
+                description: L3OUT Catalyst
+                from_port: 5
+
+
+    leaf_switch_profiles:
+      - name: LEAF101_102_SWP_nac
+        selectors:
+          - name: SEL1
+            policy: ALL_LEAFS
+            node_blocks:
+              - name: BLOCK1
+                from: 101
+                to: 102
+        interface_profiles:
+          - LEAF101_102_IFP_nac
+      - name: LEAF102_SWP_nac
+        selectors:
+          - name: SEL1
+            policy: ALL_LEAFS
+            node_blocks:
+              - name: BLOCK1
+                from: 102
+        interface_profiles:
+          - LEAF102_IFP_nac

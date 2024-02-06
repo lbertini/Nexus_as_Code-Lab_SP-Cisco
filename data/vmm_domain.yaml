@@ -1,0 +1,22 @@
+apic:
+  fabric_policies:
+    vmware_vmm_domains:
+    - name: VDS_ACI
+      access_mode: read-write
+      tag_collection: true
+      vlan_pool: vlans_vCenter
+      vswitch:
+        cdp_policy: nac-cdp-enabled
+        lldp_policy: nac-lldp-enabled
+        port_channel_policy: nac-mac-pinning
+# DELETE THIS LINE AND UNCOMMENT THE FOLLOWING LINES CHANGING THE <USERNAME>, <PASSWORD>, <IP_ADDRESS> and <DATA CENTER> of vCENTER. CHECK IDENTATION.
+#      credential_policies:
+#              - name: credentials
+#                username: <username>
+#                password: <password>
+#      vcenters:
+#        - name: vcenter1
+#          hostname_ip: <ip_address>
+#          datacenter: <data center>
+#          credential_policy: credentials
+#          dvs_version: 6.6

@@ -1,0 +1,106 @@
+---
+apic:
+  tenants:
+    - name: Nexus_as_Code
+      policies:
+        ospf_interface_policies:
+          - name: OIP1
+            description: My Description
+            network_type: bcast
+      vrfs:
+        - name: Nexus_as_Code-VRF
+
+      bridge_domains:
+        - name: BD_1
+          vrf: Nexus_as_Code-VRF
+          subnets:
+            - ip: 10.97.38.129/26
+              public: true
+          l3outs:
+            - L3OUT1
+
+        - name: BD_2
+          vrf: Nexus_as_Code-VRF
+          subnets:
+            - ip: 10.97.38.193/26
+              public: true
+          l3outs:
+            - L3OUT1
+
+      application_profiles:
+        - name: ANP_NAC
+          endpoint_groups:
+            - name: EPG1
+              bridge_domain: BD_1
+              vmware_vmm_domains:
+                - name: VDS_ACI
+              contracts:
+                consumers:
+                  - EPG1_EPG2_CT_ICMP
+                  - L3OUT_to_EPGs_CT_ICMP
+
+            - name: EPG2
+              bridge_domain: BD_2
+              vmware_vmm_domains:
+                - name: VDS_ACI
+              contracts:
+                consumers:
+                  - L3OUT_to_EPGs_CT_ICMP
+                providers:
+                  - EPG1_EPG2_CT_ICMP
+
+      filters:
+        - name: icmp_traffic
+          entries:
+            - name: icmp
+              ethertype: ip
+              protocol: icmp
+
+      contracts:
+        - name: EPG1_EPG2_CT_ICMP
+          subjects:
+            - name: icmp_allow
+              filters:
+                - filter: icmp_traffic
+                  action: permit
+        - name: L3OUT_to_EPGs_CT_ICMP
+          subjects:
+            - name: icmp_allow
+              filters:
+                - filter: icmp_traffic
+                  action: permit
+      l3outs:
+        - name: L3OUT1
+          alias: L3OUT1-ALIAS
+          description: My Desc
+          vrf: Nexus_as_Code-VRF
+          domain: L3_Domain
+          ospf:
+            area: 0
+            area_type: regular
+            area_cost: 1
+            policy: OIP1
+          nodes:
+            - node_id: 102
+              router_id: 5.5.5.5
+              router_id_as_loopback: true
+              interfaces:
+                - node_id: 102
+                  port: 5
+                  ip: 10.97.38.66/26
+          external_endpoint_groups:
+            - name: EXT-EPG1
+              alias: ABC-EXT-EPG1
+              description: My Desc
+              preferred_group: false
+              subnets:
+                - name: ALL
+                  prefix: 0.0.0.0/0
+                  import_route_control: false
+                  export_route_control: false
+                  shared_route_control: false
+                  import_security: true
+                  shared_security: false
+              contracts:
+                providers:
+                  - L3OUT_to_EPGs_CT_ICMP
